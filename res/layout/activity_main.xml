@@ -22,7 +22,7 @@
         android:layout_below="@+id/textView2"
         android:layout_marginTop="20dp"
         android:onClick="tasktimer_activity"
-        android:text="Start Task Timer" />
+        android:text="@string/taskButton_text" />
 
     <Button
         android:id="@+id/interruptionButton"
@@ -32,7 +32,7 @@
         android:layout_below="@+id/taskButton"
         android:layout_marginTop="18dp"
         android:onClick="interrupttimer_activity"
-        android:text="Interruption" />
+        android:text="@string/interruptButton_text" />
 
     <TextView
         android:id="@+id/textView1"
