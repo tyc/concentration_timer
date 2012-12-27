@@ -1,17 +1,34 @@
 package com.contimer.concentrationtimer;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
+
+
 
 public class MainActivity extends Activity {
 
 	boolean tasktimer_started = false;
 	boolean interrupttimer_started = false;
+
+	private Handler mHandler = new Handler();
+	
+	class data_time
+	{
+		long millisecond;
+		boolean running;
+	};
+	
+	data_time task_start_time = new data_time();
+	data_time interrupt_start_time;
+	data_time current_time;
+	
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -37,7 +54,9 @@ public class MainActivity extends Activity {
 			button = (Button)findViewById(R.id.interruptionButton);
 			button.setText("Start Interrupt Timer");
 			interrupttimer_started = false;
-			
+
+			mHandler.removeCallbacks(mUpdateTimeTask);
+			task_start_time.running = false;
 		}
 		else
 		{
@@ -45,10 +64,41 @@ public class MainActivity extends Activity {
 			button.setText("Stop Task Timer");
 			tasktimer_started = true;
 			
-			
-			
+			if (task_start_time.running == false) {
+				task_start_time.running = true;
+				task_start_time.millisecond = System.currentTimeMillis();
+				mHandler.removeCallbacks(mUpdateTimeTask);
+				mHandler.postDelayed(mUpdateTimeTask, 1000); // callback every 1s.
+			}			
 		}
     }
+	
+	private Runnable mUpdateTimeTask = new Runnable() {
+		   public void run() {
+		       final data_time start_time = task_start_time;
+		       long millis = System.currentTimeMillis() - start_time.millisecond;
+		       int seconds = (int) (millis / 1000);
+		       int minutes = seconds / 60;
+		       seconds     = seconds % 60;
+		       int hours   = minutes / 60;
+		       minutes     = minutes % 60;
+
+				mHandler.postDelayed(mUpdateTimeTask, 1000); // callback every 1s.
+		       
+		       String display_text; 
+		       if (seconds < 10) {
+		           display_text = hours + ":" + minutes + ":0" + seconds;
+		       } else {
+		           display_text = hours + ":" + minutes + ":" + seconds; 
+		       }
+		       
+		       TextView tv = (TextView)findViewById(R.id.taskTimer_display_value);
+		       tv.setText(display_text);
+		       
+		   }
+		};
+	
+	
 
 	// the interrupt timer timer button was clicked on, so we need to 
 	// acted upon it.
