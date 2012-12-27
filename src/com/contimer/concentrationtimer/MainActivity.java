@@ -26,7 +26,7 @@ public class MainActivity extends Activity {
 	};
 	
 	data_time task_start_time = new data_time();
-	data_time interrupt_start_time;
+	data_time interrupt_start_time = new data_time();
 	data_time current_time;
 	
 	
@@ -43,61 +43,123 @@ public class MainActivity extends Activity {
 		return true;
 	}
 
+	private void start_task_timer()
+	{
+		Button button = (Button)findViewById(R.id.taskButton);
+		button.setText("Stop Task Timer");
+		tasktimer_started = true;	
+		
+		if (task_start_time.running == false) {
+			task_start_time.running = true;
+			task_start_time.millisecond = System.currentTimeMillis();
+			mHandler.removeCallbacks(mUpdateTimeTask_task);
+			mHandler.postDelayed(mUpdateTimeTask_task, 1000); // callback every 1s.
+		}	
+	}
 	
+	/**
+	 * private method to stop the timer. This also removes any call backs to
+	 * handler method.
+	 */
+	private void stop_task_timer()
+	{
+		Button button = (Button)findViewById(R.id.taskButton);
+		button.setText("Start Task Timer");
+		tasktimer_started = false;	
+		
+		mHandler.removeCallbacks(mUpdateTimeTask_task);
+		task_start_time.running = false;
+		
+	}
+	
+	private void start_interrupt_time()
+	{
+		Button button = (Button)findViewById(R.id.interruptionButton);
+		button.setText("Stop Interrupt Timer");
+		interrupttimer_started = true;	
+		
+		if (interrupt_start_time.running == false) {
+			interrupt_start_time.running = true;
+			interrupt_start_time.millisecond = System.currentTimeMillis();
+			mHandler.removeCallbacks(mUpdateTimeTask_interrupt);
+			mHandler.postDelayed(mUpdateTimeTask_interrupt, 1000); // callback every 1s.
+		}	
+	}
+	
+	private void stop_interrupt_timer()
+	{
+		Button button = (Button)findViewById(R.id.interruptionButton);
+		button.setText("Start Interrupt Timer");
+		interrupttimer_started = false;
+		
+		mHandler.removeCallbacks(mUpdateTimeTask_interrupt);
+		interrupt_start_time.running = false;
+	}
+	
+	/**
+	 * called when the timer task button is click
+	 */
 	public void tasktimer_activity(View view) {
 		if (tasktimer_started == true)
 		{
-			Button button = (Button)findViewById(R.id.taskButton);
-			button.setText("Start Task Timer");
-			tasktimer_started = false;
-			
-			button = (Button)findViewById(R.id.interruptionButton);
-			button.setText("Start Interrupt Timer");
-			interrupttimer_started = false;
-
-			mHandler.removeCallbacks(mUpdateTimeTask);
-			task_start_time.running = false;
+			stop_task_timer();
+			stop_interrupt_timer();
 		}
 		else
 		{
-			Button button = (Button)findViewById(R.id.taskButton);
-			button.setText("Stop Task Timer");
-			tasktimer_started = true;
-			
-			if (task_start_time.running == false) {
-				task_start_time.running = true;
-				task_start_time.millisecond = System.currentTimeMillis();
-				mHandler.removeCallbacks(mUpdateTimeTask);
-				mHandler.postDelayed(mUpdateTimeTask, 1000); // callback every 1s.
-			}			
+			start_task_timer();
 		}
     }
 	
-	private Runnable mUpdateTimeTask = new Runnable() {
-		   public void run() {
-		       final data_time start_time = task_start_time;
-		       long millis = System.currentTimeMillis() - start_time.millisecond;
-		       int seconds = (int) (millis / 1000);
-		       int minutes = seconds / 60;
-		       seconds     = seconds % 60;
-		       int hours   = minutes / 60;
-		       minutes     = minutes % 60;
+	private Runnable mUpdateTimeTask_task = new Runnable() {
+		public void run() {
+			final data_time start_time = task_start_time;
+			long millis = System.currentTimeMillis() - start_time.millisecond;
+			int seconds = (int) (millis / 1000);
+			int minutes = seconds / 60;
+			seconds     = seconds % 60;
+			int hours   = minutes / 60;
+			minutes     = minutes % 60;
 
-				mHandler.postDelayed(mUpdateTimeTask, 1000); // callback every 1s.
-		       
-		       String display_text; 
-		       if (seconds < 10) {
-		           display_text = hours + ":" + minutes + ":0" + seconds;
-		       } else {
-		           display_text = hours + ":" + minutes + ":" + seconds; 
-		       }
-		       
-		       TextView tv = (TextView)findViewById(R.id.taskTimer_display_value);
-		       tv.setText(display_text);
-		       
-		   }
-		};
+			mHandler.postDelayed(mUpdateTimeTask_task, 1000); // callback every 1s.
+
+			String display_text; 
+			if (seconds < 10) {
+				display_text = hours + ":" + minutes + ":0" + seconds;
+			} else {
+				display_text = hours + ":" + minutes + ":" + seconds; 
+			}
+
+			TextView tv = (TextView)findViewById(R.id.taskTimer_display_value);
+			tv.setText(display_text);
+		}
+	};
 	
+	private Runnable mUpdateTimeTask_interrupt = new Runnable() {
+		public void run() {
+			final data_time start_time = interrupt_start_time;
+			long millis = System.currentTimeMillis() - start_time.millisecond;
+			int seconds = (int) (millis / 1000);
+			int minutes = seconds / 60;
+			seconds     = seconds % 60;
+			int hours   = minutes / 60;
+			minutes     = minutes % 60;
+
+			mHandler.postDelayed(mUpdateTimeTask_interrupt, 1000); // callback every 1s.
+
+			String display_text; 
+			if (seconds < 10) {
+				display_text = hours + ":" + minutes + ":0" + seconds;
+			} else {
+				display_text = hours + ":" + minutes + ":" + seconds; 
+			}
+
+			TextView tv = (TextView)findViewById(R.id.interruptTimer_display_value);
+			tv.setText(display_text);
+		}
+	};
+	
+		
 	
 
 	// the interrupt timer timer button was clicked on, so we need to 
@@ -106,17 +168,13 @@ public class MainActivity extends Activity {
 		
 		if (interrupttimer_started == true)
 		{
-			Button button = (Button)findViewById(R.id.interruptionButton);
-			button.setText("Start Interrupt Timer");
-			interrupttimer_started = false;
+			stop_interrupt_timer();
 		}
 		else
 		{
 			if (tasktimer_started == true)
 			{
-				Button button = (Button)findViewById(R.id.interruptionButton);
-				button.setText("Stop Interrupt Timer");
-				interrupttimer_started = true;
+				start_interrupt_time();
 			}
 			else
 			{
@@ -132,20 +190,16 @@ public class MainActivity extends Activity {
 		
 	}
 	
+	
+	
 	DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
 	    @Override
 	    public void onClick(DialogInterface dialog, int which) {
 	        switch (which){
 	        case DialogInterface.BUTTON_POSITIVE:
 	            //Yes button clicked
-				Button button = (Button)findViewById(R.id.taskButton);
-				button.setText("Stop Task Timer");
-				tasktimer_started = true;
-				
-				button = (Button)findViewById(R.id.interruptionButton);
-				button.setText("Stop Interrupt Timer");
-				interrupttimer_started = true;
-	            
+	        	start_task_timer();
+	        	start_interrupt_time();
 	            break;
 
 	        case DialogInterface.BUTTON_NEGATIVE:
