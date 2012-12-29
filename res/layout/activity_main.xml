@@ -35,17 +35,6 @@
         android:text="@string/interruptButton_text" />
 
     <TextView
-        android:id="@+id/textView1"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentTop="true"
-        android:layout_marginLeft="16dp"
-        android:layout_marginTop="42dp"
-        android:text="@string/TaskTime_label"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
-
-    <TextView
         android:id="@+id/taskTimer_display_value"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -61,6 +50,27 @@
         android:layout_above="@+id/taskButton"
         android:layout_alignLeft="@+id/taskTimer_display_value"
         android:text="@string/InterruptionTime_display_value"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <ListView
+        android:id="@+id/logListView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:stackFromBottom="true"
+        android:layout_below="@+id/interruptionButton"
+        android:layout_marginTop="20dp" >
+    </ListView>
+
+    <TextView
+        android:id="@+id/textView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="42dp"
+        android:text="@string/TaskTime_label"
         android:textAppearance="?android:attr/textAppearanceMedium" />
 
 </RelativeLayout>

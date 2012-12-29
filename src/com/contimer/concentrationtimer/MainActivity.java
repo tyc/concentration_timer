@@ -1,5 +1,11 @@
 package com.contimer.concentrationtimer;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+
 import android.os.Bundle;
 import android.os.Handler;
 import android.app.Activity;
@@ -9,7 +15,8 @@ import android.view.Menu;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-
+import android.widget.ArrayAdapter;  
+import android.widget.ListView;
 
 
 public class MainActivity extends Activity {
@@ -29,12 +36,56 @@ public class MainActivity extends Activity {
 	data_time interrupt_start_time = new data_time();
 	data_time current_time;
 	
+    // Find the ListView resource. 
+	ArrayList<String> log_list;
+	ListView mainListView;
+	ArrayAdapter listAdapter;
+
 	
+	private long getCurrentTime()
+	{
+		return System.currentTimeMillis();
+	}
+	
+	
+	/**
+	 * Return date in specified format.
+	 * @param milliSeconds Date in milliseconds
+	 * @param dateFormat Date format 
+	 * @return String representing date in specified format
+	 */
+	private static String getDateTime(long milliSeconds, String dateFormat)
+	{
+	    // Create a DateFormatter object for displaying date in specified format.
+	    DateFormat formatter = new SimpleDateFormat(dateFormat);
+
+	    // Create a calendar object that will convert the date and time value in milliseconds to date. 
+	     Calendar calendar = Calendar.getInstance();
+	     calendar.setTimeInMillis(milliSeconds);
+	     return formatter.format(calendar.getTime());
+	}
+	 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main);		
+		setContentView(R.layout.activity_main);	
+		
+		mainListView = (ListView) findViewById( R.id.logListView );
+		 
+      // Create and populate a List of planet names.  
+	    String[] log_data = new String[] { "No data!!"};    
+	    log_list = new ArrayList<String>();  
+	    log_list.addAll( Arrays.asList(log_data) );  
+	      
+	    // Create ArrayAdapter using the planet list.  
+	    listAdapter = new ArrayAdapter<String>(this, R.layout.simplerow, log_list);
+	    
+	    // Set the ArrayAdapter as the ListView's adapter.  
+	    mainListView.setAdapter( listAdapter );        
 	}
+
+
+
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -54,7 +105,11 @@ public class MainActivity extends Activity {
 			task_start_time.millisecond = System.currentTimeMillis();
 			mHandler.removeCallbacks(mUpdateTimeTask_task);
 			mHandler.postDelayed(mUpdateTimeTask_task, 1000); // callback every 1s.
-		}	
+		}
+		
+		listAdapter.clear();
+		listAdapter.add("task started! " + getDateTime(getCurrentTime(), "dd/MM/yyyy hh:mm:ss"));
+		mainListView.setAdapter(listAdapter);
 	}
 	
 	/**
@@ -69,6 +124,9 @@ public class MainActivity extends Activity {
 		
 		mHandler.removeCallbacks(mUpdateTimeTask_task);
 		task_start_time.running = false;
+	
+		listAdapter.add("task stopped! " + getDateTime(getCurrentTime(), "dd/MM/yyyy hh:mm:ss"));
+		mainListView.setAdapter(listAdapter);
 		
 	}
 	
@@ -84,6 +142,9 @@ public class MainActivity extends Activity {
 			mHandler.removeCallbacks(mUpdateTimeTask_interrupt);
 			mHandler.postDelayed(mUpdateTimeTask_interrupt, 1000); // callback every 1s.
 		}	
+		
+		listAdapter.add("task interrupted! " + getDateTime(getCurrentTime(), "dd/MM/yyyy hh:mm:ss"));
+		mainListView.setAdapter(listAdapter);
 	}
 	
 	private void stop_interrupt_timer()
@@ -94,65 +155,37 @@ public class MainActivity extends Activity {
 		
 		mHandler.removeCallbacks(mUpdateTimeTask_interrupt);
 		interrupt_start_time.running = false;
+		
+		listAdapter.add("task resumed! " + getDateTime(getCurrentTime(), "dd/MM/yyyy hh:mm:ss"));
+		mainListView.setAdapter(listAdapter);
 	}
 	
-	/**
-	 * called when the timer task button is click
-	 */
-	public void tasktimer_activity(View view) {
-		if (tasktimer_started == true)
-		{
-			stop_task_timer();
-			stop_interrupt_timer();
-		}
-		else
-		{
-			start_task_timer();
-		}
-    }
-	
+
 	private Runnable mUpdateTimeTask_task = new Runnable() {
 		public void run() {
 			final data_time start_time = task_start_time;
 			long millis = System.currentTimeMillis() - start_time.millisecond;
-			int seconds = (int) (millis / 1000);
-			int minutes = seconds / 60;
-			seconds     = seconds % 60;
-			int hours   = minutes / 60;
-			minutes     = minutes % 60;
 
 			mHandler.postDelayed(mUpdateTimeTask_task, 1000); // callback every 1s.
 
-			String display_text; 
-			if (seconds < 10) {
-				display_text = hours + ":" + minutes + ":0" + seconds;
-			} else {
-				display_text = hours + ":" + minutes + ":" + seconds; 
-			}
+			String display_text = getDateTime(millis, "hh:mm:ss"); 
 
 			TextView tv = (TextView)findViewById(R.id.taskTimer_display_value);
 			tv.setText(display_text);
 		}
 	};
 	
+	
+
+	
 	private Runnable mUpdateTimeTask_interrupt = new Runnable() {
 		public void run() {
 			final data_time start_time = interrupt_start_time;
 			long millis = System.currentTimeMillis() - start_time.millisecond;
-			int seconds = (int) (millis / 1000);
-			int minutes = seconds / 60;
-			seconds     = seconds % 60;
-			int hours   = minutes / 60;
-			minutes     = minutes % 60;
 
 			mHandler.postDelayed(mUpdateTimeTask_interrupt, 1000); // callback every 1s.
 
-			String display_text; 
-			if (seconds < 10) {
-				display_text = hours + ":" + minutes + ":0" + seconds;
-			} else {
-				display_text = hours + ":" + minutes + ":" + seconds; 
-			}
+			String display_text = getDateTime(millis, "hh:mm:ss"); 
 
 			TextView tv = (TextView)findViewById(R.id.interruptTimer_display_value);
 			tv.setText(display_text);
@@ -190,6 +223,20 @@ public class MainActivity extends Activity {
 		
 	}
 	
+	/**
+	 * called when the timer task button is click
+	 */
+	public void tasktimer_activity(View view) {
+		if (tasktimer_started == true)
+		{
+			stop_interrupt_timer();
+			stop_task_timer();
+		}
+		else
+		{
+			start_task_timer();
+		}
+    }
 	
 	
 	DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
