@@ -65,7 +65,31 @@ public class MainActivity extends Activity {
 	     return formatter.format(calendar.getTime());
 	}
 	 
-	@Override
+	static private String getDateTime_interval(long val) {
+	    StringBuilder                       buf=new StringBuilder(20);
+	    String                              sgn="";
+
+	    if(val<0) { sgn="-"; val=Math.abs(val); }
+
+	    append(buf,sgn,0,( val/3600000             ));
+	    append(buf,":",2,((val%3600000)/60000      ));
+	    append(buf,":",2,((val         %60000)/1000));
+	    // append(buf,".",3,( val                %1000));
+	    return buf.toString();
+	    }
+
+	/** Append a right-aligned and zero-padded numeric value to a `StringBuilder`. */
+	static private void append(StringBuilder tgt, String pfx, int dgt, long val) {
+	    tgt.append(pfx);
+	    if(dgt>1) {
+	        int pad=(dgt-1);
+	        for(long xa=val; xa>9 && pad>0; xa/=10) { pad--;           }
+	        for(int  xa=0;   xa<pad;        xa++  ) { tgt.append('0'); }
+	        }
+	    tgt.append(val);
+	    }
+    
+    @Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);	
@@ -108,7 +132,7 @@ public class MainActivity extends Activity {
 		}
 		
 		listAdapter.clear();
-		listAdapter.add("task started! " + getDateTime(getCurrentTime(), "dd/MM/yyyy hh:mm:ss"));
+		listAdapter.add("task started at " + getDateTime(getCurrentTime(), "dd/MM/yyyy hh:mm:ss a"));
 		mainListView.setAdapter(listAdapter);
 	}
 	
@@ -125,7 +149,7 @@ public class MainActivity extends Activity {
 		mHandler.removeCallbacks(mUpdateTimeTask_task);
 		task_start_time.running = false;
 	
-		listAdapter.add("task stopped! " + getDateTime(getCurrentTime(), "dd/MM/yyyy hh:mm:ss"));
+		listAdapter.add("task stopped at " + getDateTime(getCurrentTime(), "dd/MM/yyyy hh:mm:ss a"));
 		mainListView.setAdapter(listAdapter);
 		
 	}
@@ -143,7 +167,7 @@ public class MainActivity extends Activity {
 			mHandler.postDelayed(mUpdateTimeTask_interrupt, 1000); // callback every 1s.
 		}	
 		
-		listAdapter.add("task interrupted! " + getDateTime(getCurrentTime(), "dd/MM/yyyy hh:mm:ss"));
+		listAdapter.add("task interrupted at " + getDateTime(getCurrentTime(), "dd/MM/yyyy hh:mm:ss a"));
 		mainListView.setAdapter(listAdapter);
 	}
 	
@@ -156,7 +180,7 @@ public class MainActivity extends Activity {
 		mHandler.removeCallbacks(mUpdateTimeTask_interrupt);
 		interrupt_start_time.running = false;
 		
-		listAdapter.add("task resumed! " + getDateTime(getCurrentTime(), "dd/MM/yyyy hh:mm:ss"));
+		listAdapter.add("task resumed at " + getDateTime(getCurrentTime(), "dd/MM/yyyy hh:mm:ss a"));
 		mainListView.setAdapter(listAdapter);
 	}
 	
@@ -168,7 +192,7 @@ public class MainActivity extends Activity {
 
 			mHandler.postDelayed(mUpdateTimeTask_task, 1000); // callback every 1s.
 
-			String display_text = getDateTime(millis, "hh:mm:ss"); 
+			String display_text = getDateTime_interval(millis); 
 
 			TextView tv = (TextView)findViewById(R.id.taskTimer_display_value);
 			tv.setText(display_text);
@@ -185,7 +209,7 @@ public class MainActivity extends Activity {
 
 			mHandler.postDelayed(mUpdateTimeTask_interrupt, 1000); // callback every 1s.
 
-			String display_text = getDateTime(millis, "hh:mm:ss"); 
+			String display_text = getDateTime_interval(millis); 
 
 			TextView tv = (TextView)findViewById(R.id.interruptTimer_display_value);
 			tv.setText(display_text);
