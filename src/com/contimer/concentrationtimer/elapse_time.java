@@ -21,6 +21,7 @@ public class elapse_time {
 	public void start ()
 	{
 		start_time = getCurrentTime();
+		stop_time = start_time;
 		running = true;
 	}
 	

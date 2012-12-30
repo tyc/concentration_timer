@@ -2,6 +2,7 @@ package com.contimer.concentrationtimer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Vector;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -26,25 +27,25 @@ import com.contimer.concentrationtimer.elapse_time;
 
 public class MainActivity extends Activity {
 
-	boolean tasktimer_started = false;
-	boolean interrupttimer_started = false;
-
 	private Handler mHandler = new Handler();
 	
 	elapse_time task_timer = new elapse_time();
 	elapse_time interrupt_timer = new elapse_time();
-		
+	
+	class table_of_time
+	{
+		long task_start;
+		long task_end;
+		long interrupt_start;;
+		long interrupt_end;
+	};
+	
+	Vector<table_of_time> timelog = new Vector(1,1); 
+	
     // Find the ListView resource. 
 	ArrayList<String> log_list;
 	ListView mainListView;
 	ArrayAdapter listAdapter;
-
-	
-	private long getCurrentTime()
-	{
-		return System.currentTimeMillis();
-	}
-	
 	
 	/**
 	 * Return date in specified format.
@@ -104,6 +105,7 @@ public class MainActivity extends Activity {
 	    
 	    // Set the ArrayAdapter as the ListView's adapter.  
 	    mainListView.setAdapter( listAdapter );        
+	    
 	}
 
 
@@ -157,6 +159,9 @@ public class MainActivity extends Activity {
 		listAdapter.clear();
 		listAdapter.add("task started at " + getDateTime(task_timer.getStart_millis(), "dd/MM/yyyy hh:mm:ss a"));
 		mainListView.setAdapter(listAdapter);
+		
+		timelog.clear();
+		timelog.setSize(0);
 	}
 	
 	/**
@@ -168,20 +173,26 @@ public class MainActivity extends Activity {
 		Button button = (Button)findViewById(R.id.taskButton);
 		button.setText("Start Task Timer");
 
-
 		task_timer.stop();
 		mHandler.removeCallbacks(mUpdateTimeTask_task);
 	
 		listAdapter.add("task stopped at " + getDateTime(task_timer.getStop_millis(), "dd/MM/yyyy hh:mm:ss a"));
 		mainListView.setAdapter(listAdapter);
 		
+		table_of_time temp_time = new table_of_time();
+		
+		temp_time.task_start = task_timer.getStart_millis();
+		temp_time.task_end = task_timer.getStop_millis();
+		temp_time.interrupt_start = interrupt_timer.getStart_millis();
+		temp_time.interrupt_end = interrupt_timer.getStop_millis();
+		
+		timelog.add(temp_time);
 	}
 	
 	private void start_interrupt_time()
 	{
 		Button button = (Button)findViewById(R.id.interruptionButton);
 		button.setText("Stop Interrupt Timer");
-		interrupttimer_started = true;	
 
 		interrupt_timer.start();
 
@@ -196,7 +207,6 @@ public class MainActivity extends Activity {
 	{
 		Button button = (Button)findViewById(R.id.interruptionButton);
 		button.setText("Start Interrupt Timer");
-		interrupttimer_started = false;
 		
 		interrupt_timer.stop();
 	
@@ -204,6 +214,15 @@ public class MainActivity extends Activity {
 		
 		listAdapter.add("task resumed at " + getDateTime(interrupt_timer.getStop_millis(), "dd/MM/yyyy hh:mm:ss a"));
 		mainListView.setAdapter(listAdapter);
+		
+		table_of_time temp_time = new table_of_time();
+		
+		temp_time.task_start = task_timer.getStart_millis();
+		temp_time.task_end = task_timer.getStop_millis();
+		temp_time.interrupt_start = interrupt_timer.getStart_millis();
+		temp_time.interrupt_end = interrupt_timer.getStop_millis();
+		
+		timelog.add(temp_time);
 	}
 	
 
