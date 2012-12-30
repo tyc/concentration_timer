@@ -12,11 +12,16 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.ArrayAdapter;  
 import android.widget.ListView;
+import android.widget.Toast;
+
+import com.contimer.concentrationtimer.elapse_time;
+
 
 
 public class MainActivity extends Activity {
@@ -26,16 +31,9 @@ public class MainActivity extends Activity {
 
 	private Handler mHandler = new Handler();
 	
-	class data_time
-	{
-		long millisecond;
-		boolean running;
-	};
-	
-	data_time task_start_time = new data_time();
-	data_time interrupt_start_time = new data_time();
-	data_time current_time;
-	
+	elapse_time task_timer = new elapse_time();
+	elapse_time interrupt_timer = new elapse_time();
+		
     // Find the ListView resource. 
 	ArrayList<String> log_list;
 	ListView mainListView;
@@ -109,30 +107,55 @@ public class MainActivity extends Activity {
 	}
 
 
-
-
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.activity_main, menu);
+		getMenuInflater().inflate(R.layout.menu, menu);
 		return true;
 	}
+	
+	/**
+     * Event Handling for Individual menu item selected
+     * Identify single menu item by it's id
+     * */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        switch (item.getItemId())
+        {
+        case R.id.menu_about:
+            // Single menu item is selected do something
+            // Ex: launching new activity/screen or show alert message
+            //Toast.makeText(AndroidMenusActivity.this, "Bookmark is Selected", Toast.LENGTH_SHORT).show();
+            
+            Toast.makeText(getApplication(), "about is selected", Toast.LENGTH_SHORT).show();
+            return true;
+ 
+        case R.id.menu_export:
+            Toast.makeText(getApplication(), "export is Selected", Toast.LENGTH_SHORT).show();
+            return true;
+ 
+        default:
+            return super.onOptionsItemSelected(item);
+        }
+    }    
 
+    
+    
+    
+    
+    
 	private void start_task_timer()
 	{
 		Button button = (Button)findViewById(R.id.taskButton);
-		button.setText("Stop Task Timer");
-		tasktimer_started = true;	
+		button.setText("Stop Task Timer");	
 		
-		if (task_start_time.running == false) {
-			task_start_time.running = true;
-			task_start_time.millisecond = System.currentTimeMillis();
-			mHandler.removeCallbacks(mUpdateTimeTask_task);
-			mHandler.postDelayed(mUpdateTimeTask_task, 1000); // callback every 1s.
-		}
+		task_timer.start();
+		mHandler.removeCallbacks(mUpdateTimeTask_task);
+		mHandler.postDelayed(mUpdateTimeTask_task, 1000); // callback every 1s.
 		
 		listAdapter.clear();
-		listAdapter.add("task started at " + getDateTime(getCurrentTime(), "dd/MM/yyyy hh:mm:ss a"));
+		listAdapter.add("task started at " + getDateTime(task_timer.getStart_millis(), "dd/MM/yyyy hh:mm:ss a"));
 		mainListView.setAdapter(listAdapter);
 	}
 	
@@ -144,12 +167,12 @@ public class MainActivity extends Activity {
 	{
 		Button button = (Button)findViewById(R.id.taskButton);
 		button.setText("Start Task Timer");
-		tasktimer_started = false;	
-		
+
+
+		task_timer.stop();
 		mHandler.removeCallbacks(mUpdateTimeTask_task);
-		task_start_time.running = false;
 	
-		listAdapter.add("task stopped at " + getDateTime(getCurrentTime(), "dd/MM/yyyy hh:mm:ss a"));
+		listAdapter.add("task stopped at " + getDateTime(task_timer.getStop_millis(), "dd/MM/yyyy hh:mm:ss a"));
 		mainListView.setAdapter(listAdapter);
 		
 	}
@@ -159,15 +182,13 @@ public class MainActivity extends Activity {
 		Button button = (Button)findViewById(R.id.interruptionButton);
 		button.setText("Stop Interrupt Timer");
 		interrupttimer_started = true;	
+
+		interrupt_timer.start();
+
+		mHandler.removeCallbacks(mUpdateTimeTask_interrupt);
+		mHandler.postDelayed(mUpdateTimeTask_interrupt, 1000); // callback every 1s.
 		
-		if (interrupt_start_time.running == false) {
-			interrupt_start_time.running = true;
-			interrupt_start_time.millisecond = System.currentTimeMillis();
-			mHandler.removeCallbacks(mUpdateTimeTask_interrupt);
-			mHandler.postDelayed(mUpdateTimeTask_interrupt, 1000); // callback every 1s.
-		}	
-		
-		listAdapter.add("task interrupted at " + getDateTime(getCurrentTime(), "dd/MM/yyyy hh:mm:ss a"));
+		listAdapter.add("task interrupted at " + getDateTime(interrupt_timer.getStart_millis(), "dd/MM/yyyy hh:mm:ss a"));
 		mainListView.setAdapter(listAdapter);
 	}
 	
@@ -177,18 +198,18 @@ public class MainActivity extends Activity {
 		button.setText("Start Interrupt Timer");
 		interrupttimer_started = false;
 		
+		interrupt_timer.stop();
+	
 		mHandler.removeCallbacks(mUpdateTimeTask_interrupt);
-		interrupt_start_time.running = false;
 		
-		listAdapter.add("task resumed at " + getDateTime(getCurrentTime(), "dd/MM/yyyy hh:mm:ss a"));
+		listAdapter.add("task resumed at " + getDateTime(interrupt_timer.getStop_millis(), "dd/MM/yyyy hh:mm:ss a"));
 		mainListView.setAdapter(listAdapter);
 	}
 	
 
 	private Runnable mUpdateTimeTask_task = new Runnable() {
 		public void run() {
-			final data_time start_time = task_start_time;
-			long millis = System.currentTimeMillis() - start_time.millisecond;
+			long millis = System.currentTimeMillis() - task_timer.getStart_millis();
 
 			mHandler.postDelayed(mUpdateTimeTask_task, 1000); // callback every 1s.
 
@@ -204,8 +225,8 @@ public class MainActivity extends Activity {
 	
 	private Runnable mUpdateTimeTask_interrupt = new Runnable() {
 		public void run() {
-			final data_time start_time = interrupt_start_time;
-			long millis = System.currentTimeMillis() - start_time.millisecond;
+
+			long millis = System.currentTimeMillis() - interrupt_timer.getStart_millis();
 
 			mHandler.postDelayed(mUpdateTimeTask_interrupt, 1000); // callback every 1s.
 
@@ -223,13 +244,13 @@ public class MainActivity extends Activity {
 	// acted upon it.
 	public void interrupttimer_activity(View view) {
 		
-		if (interrupttimer_started == true)
+		if (interrupt_timer.status() == true)
 		{
 			stop_interrupt_timer();
 		}
 		else
 		{
-			if (tasktimer_started == true)
+			if (task_timer.status() == true)
 			{
 				start_interrupt_time();
 			}
@@ -251,7 +272,7 @@ public class MainActivity extends Activity {
 	 * called when the timer task button is click
 	 */
 	public void tasktimer_activity(View view) {
-		if (tasktimer_started == true)
+		if (task_timer.status() == true)
 		{
 			stop_interrupt_timer();
 			stop_task_timer();
