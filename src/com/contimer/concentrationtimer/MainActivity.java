@@ -2,7 +2,11 @@ package com.contimer.concentrationtimer;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Vector;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -22,13 +26,15 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.contimer.concentrationtimer.elapse_time;
+import au.com.bytecode.opencsv.CSVReader;
+import au.com.bytecode.opencsv.CSVWriter;
 
 
 
 public class MainActivity extends Activity {
 
 	private Handler mHandler = new Handler();
-	
+		
 	elapse_time task_timer = new elapse_time();
 	elapse_time interrupt_timer = new elapse_time();
 	
@@ -46,6 +52,39 @@ public class MainActivity extends Activity {
 	ArrayList<String> log_list;
 	ListView mainListView;
 	ArrayAdapter listAdapter;
+	
+	private void WriteFile(Vector<table_of_time> timelog)
+	{
+		try {
+			CSVWriter writer = new CSVWriter(new FileWriter("/mnt/sdcard/data/myfile.csv"), ',');
+			
+			table_of_time time;
+			String [] line_of_time = new String[4];
+			List<String []> ls = new ArrayList<String[]>();
+			
+			int number_of_entries = timelog.size();
+			
+			for ( int entry = 0; entry < number_of_entries; entry++)
+			{
+				time = timelog.get(entry);
+				line_of_time[0] = String.valueOf(time.task_start);
+				line_of_time[1] = String.valueOf(time.task_end);
+				line_of_time[2] = String.valueOf(time.interrupt_start);
+				line_of_time[3] = String.valueOf(time.interrupt_end);
+				
+				ls.add(line_of_time);
+			}
+			
+			writer.writeAll(ls);
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			
+			Toast.makeText(getApplication(), "WriteFile failed!", Toast.LENGTH_SHORT).show();
+		};
+	}
+	
 	
 	/**
 	 * Return date in specified format.
@@ -88,10 +127,33 @@ public class MainActivity extends Activity {
 	    tgt.append(val);
 	    }
     
-    @Override
+    
+	@Override
+	protected void onRestart()
+	{
+		super.onRestart(); 	// always call its super function.
+		
+		Toast.makeText(getApplication(), "onRestart is CALLED!", Toast.LENGTH_SHORT).show();
+	}
+	
+	protected void onDestroy ()
+	{
+		super.onDestroy();
+		Toast.makeText(getApplication(), "onDestroy is CALLED!", Toast.LENGTH_SHORT).show();
+	}
+	
+	protected void onResume ()
+	{
+		super.onResume();
+		Toast.makeText(getApplication(), "onResume is CALLED!", Toast.LENGTH_SHORT).show();
+	}
+		
+	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);	
+		
+		Toast.makeText(getApplication(), "onCreate is CALLED!", Toast.LENGTH_SHORT).show();
 		
 		mainListView = (ListView) findViewById( R.id.logListView );
 		 
@@ -130,7 +192,12 @@ public class MainActivity extends Activity {
             // Ex: launching new activity/screen or show alert message
             //Toast.makeText(AndroidMenusActivity.this, "Bookmark is Selected", Toast.LENGTH_SHORT).show();
             
-            Toast.makeText(getApplication(), "about is selected", Toast.LENGTH_SHORT).show();
+			// pop up an error dialog box.
+			AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder
+				.setMessage("Concentration Timer\nversion 0.12")
+				.setPositiveButton("OK", null)
+			    .show();
             return true;
  
         case R.id.menu_export:
@@ -187,6 +254,7 @@ public class MainActivity extends Activity {
 		temp_time.interrupt_end = interrupt_timer.getStop_millis();
 		
 		timelog.add(temp_time);
+		WriteFile(timelog);
 	}
 	
 	private void start_interrupt_time()
@@ -280,7 +348,7 @@ public class MainActivity extends Activity {
 				builder
 					.setMessage("Task timer is not started, start now?")
 					.setPositiveButton("Yes", dialogClickListener)
-				    .setNegativeButton("No", dialogClickListener)
+				    .setNegativeButton("No", null)
 				    .show();
 			}
 		}
@@ -311,10 +379,6 @@ public class MainActivity extends Activity {
 	            //Yes button clicked
 	        	start_task_timer();
 	        	start_interrupt_time();
-	            break;
-
-	        case DialogInterface.BUTTON_NEGATIVE:
-	            //No button clicked - do nothing
 	            break;
 	        }
 	    }
