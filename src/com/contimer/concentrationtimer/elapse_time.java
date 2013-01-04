@@ -9,9 +9,9 @@ package com.contimer.concentrationtimer;
  */
 public class elapse_time {
 
-	long start_time;
-	long stop_time;
-	boolean running = false;
+	private long start_time;
+	private long stop_time;
+	private boolean running = false;
 	
 	private long getCurrentTime()
 	{
