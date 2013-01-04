@@ -26,6 +26,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 import com.contimer.concentrationtimer.elapse_time;
+import com.contimer.concentrationtimer.time_stats;
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 
@@ -36,7 +37,9 @@ public class MainActivity extends Activity {
 	private Handler mHandler = new Handler();
 		
 	elapse_time task_timer = new elapse_time();
+	time_stats task_stats = new time_stats();
 	elapse_time interrupt_timer = new elapse_time();
+	time_stats interrupt_stats = new time_stats();
 	
 	class table_of_time
 	{
@@ -187,6 +190,26 @@ public class MainActivity extends Activity {
     {
         switch (item.getItemId())
         {
+        case R.id.menu_stats:
+        	
+        	// display some stats about the most recent session
+        	AlertDialog.Builder stats_alert = new AlertDialog.Builder(this);
+        	String stats_string;
+        	
+        	stats_string  = "Task Duration: " + getDateTime_interval(task_timer.getElapse_millis()) + "\n\n";
+        	
+        	stats_string += "No of interrupts: " + interrupt_stats.getCount() + "\n";
+        	stats_string += "Total interrupts: " + getDateTime_interval(interrupt_stats.getTotal()) + "\n";
+        	stats_string += "Average length: " + getDateTime_interval(interrupt_stats.getAverage()) + "\n";
+        	
+        	
+        	stats_alert
+        		.setMessage(stats_string)
+        		.setPositiveButton("OK",null)
+        		.show();
+        	
+        	return true;
+        
         case R.id.menu_about:
             // Single menu item is selected do something
             // Ex: launching new activity/screen or show alert message
@@ -229,6 +252,9 @@ public class MainActivity extends Activity {
 		
 		timelog.clear();
 		timelog.setSize(0);
+		
+		interrupt_stats.init();
+		task_stats.init();
 	}
 	
 	/**
@@ -255,6 +281,8 @@ public class MainActivity extends Activity {
 		
 		timelog.add(temp_time);
 		WriteFile(timelog);
+		
+		task_stats.push(task_timer.getElapse_millis());
 	}
 	
 	private void start_interrupt_time()
@@ -269,6 +297,7 @@ public class MainActivity extends Activity {
 		
 		listAdapter.add("task interrupted at " + getDateTime(interrupt_timer.getStart_millis(), "dd/MM/yyyy hh:mm:ss a"));
 		mainListView.setAdapter(listAdapter);
+		
 	}
 	
 	private void stop_interrupt_timer()
@@ -291,6 +320,8 @@ public class MainActivity extends Activity {
 		temp_time.interrupt_end = interrupt_timer.getStop_millis();
 		
 		timelog.add(temp_time);
+
+		interrupt_stats.push(interrupt_timer.getElapse_millis());
 	}
 	
 
@@ -361,7 +392,11 @@ public class MainActivity extends Activity {
 	public void tasktimer_activity(View view) {
 		if (task_timer.status() == true)
 		{
-			stop_interrupt_timer();
+			if (interrupt_timer.status() == true)
+			{
+				stop_interrupt_timer();
+			}
+			
 			stop_task_timer();
 		}
 		else

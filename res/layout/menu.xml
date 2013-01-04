@@ -3,11 +3,12 @@
     <!-- Single menu item
          Set id, icon and Title for each menu item
     -->
-    <item android:id="@+id/menu_export"
-          
+    <item android:id="@+id/menu_stats"       
+          android:title="Stats" />
+
+    <item android:id="@+id/menu_export"       
           android:title="Export" />
  
     <item android:id="@+id/menu_about"
-          
           android:title="About" />
 </menu>
